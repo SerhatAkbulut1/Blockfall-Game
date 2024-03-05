@@ -191,6 +191,14 @@ void BlockFall::initialize_grid(const string &input_file) {
 }
 
 BlockFall::~BlockFall() {
+    Block* currentBlock = initial_block;
+    while(currentBlock!=nullptr) {
+        Block* tempNextBlock = currentBlock->next_block;
+        
+        deleteBlock(currentBlock);
 
+        currentBlock = tempNextBlock;
+    }
+    active_rotation = nullptr;
+    initial_block = nullptr;
 }
-
