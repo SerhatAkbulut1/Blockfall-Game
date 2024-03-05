@@ -1,40 +1,28 @@
-#ifndef PA2_GAMECONTROLLER_H
-#define PA2_GAMECONTROLLER_H
+#ifndef GAMECONTROLLER_H
+#define GAMECONTROLLER_H
 
+#include <vector>
+#include <string>
 #include "BlockFall.h"
-
-using namespace std;
 
 class GameController {
 public:
-    bool play(BlockFall &game, const string &commands_file); // Function that implements the gameplay
-    void moveRight(int* y_position);
-    void moveLeft(int* y_position);
-    void moveDown(int* x_position);
-    void moveUp(int* x_position);
-
-    vector<vector<int>> writetoGrid(vector<vector<int>>grid,vector<vector<bool>> gameblock,int x_position,int y_position);
-    vector<vector<int>> clearGrid(vector<vector<int>>grid,vector<vector<bool>> gameblock,int x_position,int y_position);
-    bool collisionCheck(vector<vector<bool>> &block,vector<vector<int>> grid,int x_position,int y_position);
-    void print_grid(std::vector<std::vector<int>> &grid);
-
-
-    vector<vector<int>>gravityController( vector<vector<int>> grid);
-
-    vector<vector<int>> clearRows(vector<vector<int>> grid,vector<int> fullRows);
-
-    void print_block(const vector<std::vector<bool>> &block);
-
-    bool isPowerUponGrid(vector<vector<int>> grid, vector<vector<bool>> gameblock);
-
-    void clearFullGrid(BlockFall &game);
-
-    vector<int> fullRowsNumbers(vector<vector<int>> grid);
-
-    int onePointNumber(BlockFall &game);
-
-    int blockOnePointNumber(vector<vector<bool>> block);
+    void moveRight(int& y_position);
+    void moveLeft(int& y_position);
+    void moveDown(int& x_position);
+    void moveUp(int& x_position);
+    int countBlockPoints(const std::vector<std::vector<bool>>& block);
+    int countGridPoints(const std::vector<std::vector<int>>& grid);
+    void clearGrid(std::vector<std::vector<int>>& grid);
+    bool checkPowerUp(const std::vector<std::vector<int>>& grid, const std::vector<std::vector<bool>>& power_up);
+    std::vector<std::vector<int>> applyBlockToGrid(std::vector<std::vector<int>> grid, const std::vector<std::vector<bool>>& block, int x_position, int y_position);
+    std::vector<std::vector<int>> removeBlockFromGrid(std::vector<std::vector<int>> grid, const std::vector<std::vector<bool>>& block, int x_position, int y_position);
+    bool checkCollision(const std::vector<std::vector<bool>>& block, const std::vector<std::vector<int>>& grid, int x_position, int y_position);
+    void printGrid(const std::vector<std::vector<int>>& grid);
+    std::vector<std::vector<int>> applyGravity(std::vector<std::vector<int>> grid);
+    std::vector<int> findFullRows(const std::vector<std::vector<int>>& grid);
+    std::vector<std::vector<int>> clearRows(std::vector<std::vector<int>>& grid, const std::vector<int>& full_rows);
+    bool play(BlockFall& game, const std::string& commands_file);
 };
 
-
-#endif //PA2_GAMECONTROLLER_H
+#endif // GAMECONTROLLER_H
