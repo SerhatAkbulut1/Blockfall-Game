@@ -1,104 +1,71 @@
 #include <fstream>
-#include "GameController.h"
 #include <iostream>
+#include "GameController.h"
 
-void GameController::moveRight(int* y_position) {
-    (*y_position)++;
+void GameController::moveRight(int& y_position) {
+    y_position++;
 }
-void GameController::moveLeft(int* y_position){
-    (*y_position)--;
+
+void GameController::moveLeft(int& y_position) {
+    y_position--;
 }
-void GameController::moveDown(int* x_position){
-    (*x_position)++;
+
+void GameController::moveDown(int& x_position) {
+    x_position++;
 }
-void GameController::moveUp(int* x_position){
-    (*x_position)--;
+
+void GameController::moveUp(int& x_position) {
+    x_position--;
 }
-int GameController::blockOnePointNumber(vector<vector<bool>> block){
-    int number = 0;
-    for (int i = 0; i < block.size(); ++i) {
-        for (int j = 0; j <block[0].size(); ++j) {
-            if (block[i][j] == 1){
-                number++;
+
+int GameController::countBlockPoints(const std::vector<std::vector<bool>>& block) {
+    int points = 0;
+    for (const auto& row : block) {
+        for (bool cell : row) {
+            if (cell) {
+                points++;
             }
         }
     }
-    return number;
+    return points;
 }
-int GameController::onePointNumber(BlockFall &game){
-    int number = 0;
-    for (int i = 0; i < game.grid.size(); ++i) {
-        for (int j = 0; j < game.grid[0].size(); ++j) {
-            if (game.grid[i][j] == 1){
-                number++;
+
+int GameController::countGridPoints(const std::vector<std::vector<int>>& grid) {
+    int points = 0;
+    for (const auto& row : grid) {
+        for (int cell : row) {
+            if (cell == 1) {
+                points++;
             }
         }
     }
-    return  number;
+    return points;
 }
 
-void GameController::clearFullGrid(BlockFall &game){
-    for (int i = 0; i < game.grid.size(); ++i) {
-        for (int j = 0; j < game.grid[0].size(); ++j) {
-            game.grid[i][j] = 0;
+void GameController::clearGrid(std::vector<std::vector<int>>& grid) {
+    for (auto& row : grid) {
+        for (int& cell : row) {
+            cell = 0;
         }
     }
 }
-bool GameController:: isPowerUponGrid(vector<vector<int>>grid,vector<vector<bool>> gameblock){
 
-    for (int i = 0; i < grid.size()-gameblock.size(); ++i) {
-        for (int j = 0; j < grid[0].size()-gameblock[0].size(); ++j) {
-            vector<vector<bool>> shape;
-            for (int k = 0; k < gameblock.size(); ++k) {
-                vector<bool> row;
-                for (int l = 0; l < gameblock[0].size(); ++l) {
-                    if(grid[i+k][j+l] == 1){
-                        row.push_back(true);
-                    }else{
-                        row.push_back(false);
+bool GameController::checkPowerUp(const std::vector<std::vector<int>>& grid, const std::vector<std::vector<bool>>& power_up) {
+    for (int i = 0; i <= grid.size() - power_up.size(); ++i) {
+        for (int j = 0; j <= grid[0].size() - power_up[0].size(); ++j) {
+            bool match = true;
+            for (int x = 0; x < power_up.size(); ++x) {
+                for (int y = 0; y < power_up[0].size(); ++y) {
+                    if (power_up[x][y] && grid[i + x][j + y] != 1) {
+                        match = false;
+                        break;
                     }
                 }
-                shape.push_back(row);
+                if (!match) {
+                    break;
+                }
             }
-            if(gameblock == shape){
-                return true;
-            }else{
-                continue;
-            }
-        }
-    }
-    return false;
-}
-vector<vector<int>> GameController::writetoGrid(vector<vector<int>>grid,vector<vector<bool>> gameblock,int x_position,int y_position){
-    for (int i = 0; i < gameblock.size(); ++i) {
-        for (int j = 0; j < gameblock[0].size(); ++j) {
-            if (grid[i+x_position][j+y_position] != 1){
-                grid[i+x_position][j+y_position] = gameblock [i][j];
-            }
-        }
-    }
-    return grid;
-}
-vector<vector<int>> GameController::clearGrid(vector<vector<int>>grid,vector<vector<bool>> gameblock,int x_position,int y_position){
-    for (int i = 0; i < gameblock.size(); ++i) {
-        for (int j = 0; j < gameblock[0].size(); ++j) {
-            grid[i+x_position][j+y_position] = 0;
-        }
-    }
-    return grid;
-}
-bool GameController::collisionCheck(vector<vector<bool>> &block,vector<vector<int>> grid,int x_position,int y_position){
-
-    for (int i = 0; i < block.size(); ++i) {
-        for (int j = 0; j < block[0].size(); ++j) {
-            if ((i + x_position < 0) || (i + x_position >= grid.size()) || (j + y_position < 0) || (j + y_position >= grid[0].size())) {
-                return true;
-            }
-        }
-    }
-    for (int i = 0; i < block.size(); ++i) {
-        for (int j = 0; j < block[0].size(); ++j) {
-            if(block[i][j] == 1 && grid[i+x_position][j+y_position] == 1){
+            if (match) {
                 return true;
             }
         }
@@ -106,170 +73,161 @@ bool GameController::collisionCheck(vector<vector<bool>> &block,vector<vector<in
     return false;
 }
 
-
-void GameController::print_grid(std::vector<std::vector<int>> &grid) {
-    for (int i = 0; i < grid.size(); ++i) {
-        for (int j = 0; j < grid[0].size(); ++j) {
-            std::cout << (grid[i][j] == 1 ?  1 : 0)<<"";
+std::vector<std::vector<int>> GameController::applyBlockToGrid(std::vector<std::vector<int>> grid, const std::vector<std::vector<bool>>& block, int x_position, int y_position) {
+    for (int i = 0; i < block.size(); ++i) {
+        for (int j = 0; j < block[0].size(); ++j) {
+            if (block[i][j]) {
+                grid[x_position + i][y_position + j] = 1;
+            }
         }
-        std::cout<<endl;
+    }
+    return grid;
+}
 
+std::vector<std::vector<int>> GameController::removeBlockFromGrid(std::vector<std::vector<int>> grid, const std::vector<std::vector<bool>>& block, int x_position, int y_position) {
+    for (int i = 0; i < block.size(); ++i) {
+        for (int j = 0; j < block[0].size(); ++j) {
+            if (block[i][j]) {
+                grid[x_position + i][y_position + j] = 0;
+            }
+        }
+    }
+    return grid;
+}
+
+bool GameController::checkCollision(const std::vector<std::vector<bool>>& block, const std::vector<std::vector<int>>& grid, int x_position, int y_position) {
+    for (int i = 0; i < block.size(); ++i) {
+        for (int j = 0; j < block[0].size(); ++j) {
+            if (block[i][j]) {
+                int new_x = x_position + i;
+                int new_y = y_position + j;
+                if (new_x < 0 || new_x >= grid.size() || new_y < 0 || new_y >= grid[0].size() || grid[new_x][new_y] == 1) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+void GameController::printGrid(const std::vector<std::vector<int>>& grid) {
+    for (const auto& row : grid) {
+        for (int cell : row) {
+            std::cout << (cell == 1 ? 'X' : '.') << ' ';
+        }
+        std::cout << std::endl;
     }
 }
-vector<vector<int>> GameController::gravityController(vector<vector<int>> grid) {
+
+std::vector<std::vector<int>> GameController::applyGravity(std::vector<std::vector<int>> grid) {
     for (int j = 0; j < grid[0].size(); ++j) {
-        int targetRow = grid.size() - 1;
+        int write_index = grid.size() - 1;
         for (int i = grid.size() - 1; i >= 0; --i) {
             if (grid[i][j] == 1) {
-                grid[targetRow][j] = 1;
-                if (targetRow != i) {
-                    grid[i][j] = 0;
-                }
-                --targetRow;
+                grid[write_index--][j] = 1;
             }
+        }
+        for (int i = write_index; i >= 0; --i) {
+            grid[i][j] = 0;
         }
     }
     return grid;
 }
-vector<int> GameController::fullRowsNumbers(vector<vector<int>>grid) {
-    vector<int> fullRows;
+
+std::vector<int> GameController::findFullRows(const std::vector<std::vector<int>>& grid) {
+    std::vector<int> full_rows;
     for (int i = 0; i < grid.size(); ++i) {
-        bool isRowFull = true;
+        bool full = true;
         for (int j = 0; j < grid[0].size(); ++j) {
-            if (grid[i][j] == 0) {
-                isRowFull = false;
+            if (grid[i][j] != 1) {
+                full = false;
                 break;
             }
         }
-        if (isRowFull) {
-            fullRows.push_back(i);
+        if (full) {
+            full_rows.push_back(i);
         }
     }
-    return fullRows;
+    return full_rows;
 }
-vector<vector<int>> GameController::clearRows(vector<vector<int>>grid,vector<int> fullRows){
-    for (int i : fullRows) {
-        grid.erase(grid.begin() + i);
+
+std::vector<std::vector<int>> GameController::clearRows(std::vector<std::vector<int>>& grid, const std::vector<int>& full_rows) {
+    for (int row_index : full_rows) {
+        grid.erase(grid.begin() + row_index);
         grid.insert(grid.begin(), std::vector<int>(grid[0].size(), 0));
     }
     return grid;
 }
-bool GameController::play(BlockFall& game, const string& commands_file){
 
-    // TODO: Implement the gameplay here while reading the commands from the input file given as the 3rd command-line
-    //       argument. The return value represents if the gameplay was successful or not: false if game over,
-    //       true otherwise.
-
-    Block* gameBlock = game.active_rotation;
-    vector<vector<bool>> power_up_shape = game.power_up;
-
-
-    std::ifstream inputFile(commands_file);
-    if(!inputFile.is_open()){
+bool GameController::play(BlockFall& game, const std::string& commands_file) {
+    std::ifstream input_file(commands_file);
+    if (!input_file.is_open()) {
         return false;
     }
+
     int x_position = 0;
     int y_position = 0;
 
     std::string command;
-    while(inputFile >> command){
-
-        std::cout<< command << std::endl;
-        if (command == "PRINT_GRID"){
-            game.grid = writetoGrid(game.grid,gameBlock->shape,x_position,y_position);
-            print_grid(game.grid);
-            cout<<"-----------------------------------"<<endl;
-            game.grid = clearGrid(game.grid,gameBlock->shape,x_position,y_position);
+    while (input_file >> command) {
+        if (command == "PRINT_GRID") {
+            printGrid(game.grid);
         } else if (command == "ROTATE_RIGHT") {
-            if (!collisionCheck(gameBlock->right_rotation->shape, game.grid, x_position, y_position)) {
-                int rotatedWidth = gameBlock->right_rotation->shape[0].size();
-                if ((y_position + rotatedWidth)<= game.grid[0].size()) {
-                    gameBlock = gameBlock->right_rotation;
-                }
+            if (!checkCollision(game.active_rotation->right_rotation->shape, game.grid, x_position, y_position)) {
+                game.active_rotation = game.active_rotation->right_rotation;
             }
         } else if (command == "ROTATE_LEFT") {
-            if (!collisionCheck(gameBlock->left_rotation->shape, game.grid, x_position, y_position)) {
-                int rotatedWidth = gameBlock->left_rotation->shape[0].size();
-                if ((y_position + rotatedWidth) <= game.grid[0].size()) {
-                    gameBlock = gameBlock->left_rotation;
-                }
+            if (!checkCollision(game.active_rotation->left_rotation->shape, game.grid, x_position, y_position)) {
+                game.active_rotation = game.active_rotation->left_rotation;
             }
-        }
-        else if (command == "MOVE_RIGHT") {
-            if(!collisionCheck(gameBlock -> shape,game.grid,x_position,y_position)){
-               if(y_position != game.grid[0].size()-gameBlock->shape[0].size()){
-                    moveRight(&y_position);
-               }
-            }else{
-                moveLeft(&y_position);
+        } else if (command == "MOVE_RIGHT") {
+            if (!checkCollision(game.active_rotation->shape, game.grid, x_position, y_position + 1)) {
+                moveRight(y_position);
             }
-
         } else if (command == "MOVE_LEFT") {
-            if(!collisionCheck(gameBlock -> shape,game.grid,x_position,y_position)){
-                if(y_position != 0){
-                    moveLeft(&y_position);
-                }
-            }else{
-                moveRight(&y_position);
+            if (!checkCollision(game.active_rotation->shape, game.grid, x_position, y_position - 1)) {
+                moveLeft(y_position);
             }
-
         } else if (command == "DROP") {
-            while(!collisionCheck(gameBlock->shape,game.grid,x_position,y_position)){
-                moveDown(&x_position);
+            while (!checkCollision(game.active_rotation->shape, game.grid, x_position + 1, y_position)) {
+                moveDown(x_position);
             }
-            if(x_position != 0){
-                moveUp(&x_position);
+            game.grid = applyBlockToGrid(game.grid, game.active_rotation->shape, x_position, y_position);
+            if (game.gravity_mode_on) {
+                game.grid = applyGravity(game.grid);
             }
-            game.grid = writetoGrid(game.grid,gameBlock->shape,x_position,y_position);
-            if(game.gravity_mode_on){
-                game.grid = gravityController(game.grid);
-            }
-            game.current_score += x_position* blockOnePointNumber(gameBlock->shape);
-            x_position = 0;
-            y_position = 0;
-            gameBlock = gameBlock -> next_block;
-            print_grid(game.grid);
+            game.current_score += x_position * countBlockPoints(game.active_rotation->shape);
 
-            if(isPowerUponGrid(game.grid,game.power_up)){
-                game.current_score = onePointNumber(game)+1000;
-                clearFullGrid(game);
+            if (checkPowerUp(game.grid, game.power_up)) {
+                game.current_score += 1000;
+                clearGrid(game.grid);
             }
-            vector<int> fullRows = fullRowsNumbers(game.grid);
-            if(fullRows.size() > 0){
-                game.grid = clearRows(game.grid,fullRows);
-                game.current_score += game.grid[0].size();
+            std::vector<int> full_rows = findFullRows(game.grid);
+            if (!full_rows.empty()) {
+                game.grid = clearRows(game.grid, full_rows);
+                game.current_score += full_rows.size() * game.grid[0].size(); // Each cleared row gives points equal to the width of the grid
             }
 
-            std::cout<< game.current_score << endl;
-
+            std::cout << "Current Score: " << game.current_score << std::endl;
         } else if (command == "GRAVITY_SWITCH") {
-            if(game.gravity_mode_on){
-                game.gravity_mode_on = false;
-            }else{
-                game.gravity_mode_on = true;
-                game.grid = gravityController(game.grid);
-                if(isPowerUponGrid(game.grid,game.power_up)){
-                    game.current_score = onePointNumber(game)+1000;
-                    clearFullGrid(game);
+            game.gravity_mode_on = !game.gravity_mode_on;
+            if (game.gravity_mode_on) {
+                game.grid = applyGravity(game.grid);
+                if (checkPowerUp(game.grid, game.power_up)) {
+                    game.current_score += 1000;
+                    clearGrid(game.grid);
                 }
-                vector<int> fullRows = fullRowsNumbers(game.grid);
-                if(fullRows.size() > 0){
-                    game.grid = clearRows(game.grid,fullRows);
-                    game.current_score += game.grid[0].size();
+                std::vector<int> full_rows = findFullRows(game.grid);
+                if (!full_rows.empty()) {
+                    game.grid = clearRows(game.grid, full_rows);
+                    game.current_score += full_rows.size() * game.grid[0].size(); // Each cleared row gives points equal to the width of the grid
                 }
             }
-
         } else {
-            std::cout<< "Unknown command: " << command << std::endl;
+            std::cout << "Unknown command: " << command << std::endl;
         }
-
     }
-    game.active_rotation = gameBlock;
 
-
-    inputFile.close();
+    input_file.close();
     return true;
 }
-
-
-
